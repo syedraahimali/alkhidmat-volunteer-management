@@ -1,0 +1,10 @@
+{
+  "name": "Alkhidmat Karachi Volunteer Portal",
+  "short_name": "AK Volunteer",
+  "description": "Volunteer events, QR attendance, certificates, and impact reporting.",
+  "start_url": "/dashboard",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#0f766e",
+  "icons": []
+}
