@@ -32,6 +32,14 @@ function safeNextPath(next?: string | null) {
   return next;
 }
 
+function safeAdminNextPath(next?: string | null) {
+  if (!next || !next.startsWith("/admin") || next.startsWith("//") || next === "/admin/login") {
+    return "/admin";
+  }
+
+  return next;
+}
+
 export async function loginAction(_state: AuthActionState, formData: FormData): Promise<AuthActionState> {
   if (!isSupabaseConfigured()) {
     return { message: "Supabase environment variables are not configured yet." };
@@ -59,6 +67,47 @@ export async function loginAction(_state: AuthActionState, formData: FormData): 
 
   revalidatePath("/", "layout");
   redirect(safeNextPath(parsed.data.next));
+}
+
+export async function adminLoginAction(_state: AuthActionState, formData: FormData): Promise<AuthActionState> {
+  if (!isSupabaseConfigured()) {
+    return { message: "Supabase environment variables are not configured yet." };
+  }
+
+  const parsed = loginSchema.safeParse({
+    email: formValue(formData, "email"),
+    password: formValue(formData, "password"),
+    next: formValue(formData, "next"),
+  });
+
+  if (!parsed.success) {
+    return { fieldErrors: parsed.error.flatten().fieldErrors };
+  }
+
+  const supabase = await createClient();
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email: parsed.data.email,
+    password: parsed.data.password,
+  });
+
+  if (error || !data.user) {
+    return { message: error?.message ?? "We could not sign you in. Please try again." };
+  }
+
+  const { data: roles, error: roleError } = await supabase
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", data.user.id);
+
+  const canAccessAdmin = !roleError && (roles ?? []).some((row) => ["admin", "coordinator", "ngo_admin"].includes(row.role));
+
+  if (!canAccessAdmin) {
+    await supabase.auth.signOut();
+    return { message: "This login is for administrators and coordinators only." };
+  }
+
+  revalidatePath("/", "layout");
+  redirect(safeAdminNextPath(parsed.data.next));
 }
 
 export async function signupAction(_state: AuthActionState, formData: FormData): Promise<AuthActionState> {

@@ -10,6 +10,8 @@ export default async function AdminPage() {
   const { user } = await requireAdmin();
 
   const cards = [
+    { label: "Event management", phase: "View events", icon: CalendarPlus, href: "/admin/events" },
+    { label: "Create New Event", phase: "Add a volunteer opportunity", icon: CalendarPlus, href: "/admin/events/new" },
     { label: "QR attendance", phase: "Scan volunteer check-ins", icon: CalendarPlus, href: "/admin/attendance" },
     { label: "Registration approvals", phase: "Review registrations", icon: ClipboardCheck, href: "/admin/registrations" },
     { label: "Communications", phase: "Announcements", icon: Megaphone, href: "/admin/communications" },

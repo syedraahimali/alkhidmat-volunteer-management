@@ -34,11 +34,11 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   const path = request.nextUrl.pathname;
-  const isProtected = protectedPrefixes.some((prefix) => path.startsWith(prefix));
+  const isProtected = protectedPrefixes.some((prefix) => path.startsWith(prefix)) && path !== "/admin/login";
 
   if (isProtected && !user) {
     const redirectUrl = request.nextUrl.clone();
-    redirectUrl.pathname = "/auth/login";
+    redirectUrl.pathname = path.startsWith("/admin") ? "/admin/login" : "/auth/login";
     redirectUrl.searchParams.set("next", path);
     return NextResponse.redirect(redirectUrl);
   }

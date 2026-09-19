@@ -2,16 +2,122 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { getCurrentUser } from "@/lib/auth/session";
+import { getCurrentUser, getUserRoles, isAdminRole } from "@/lib/auth/session";
 import { isSupabaseConfigured } from "@/lib/env";
 import { createClient } from "@/lib/supabase/server";
+import { createEventSchema } from "@/lib/validation/events";
 
 export type RegistrationActionState = {
   ok?: boolean;
   message?: string;
 };
 
+export type CreateEventActionState = {
+  ok?: boolean;
+  message?: string;
+  eventId?: string;
+  fieldErrors?: Record<string, string[] | undefined>;
+};
+
 const eventIdSchema = z.uuid();
+
+function formValue(formData: FormData, key: string) {
+  const value = formData.get(key);
+  return typeof value === "string" ? value : "";
+}
+
+function toIsoDateTime(value: string | null) {
+  return value ? new Date(value).toISOString() : null;
+}
+
+function splitSkills(value: string | null) {
+  if (!value) {
+    return null;
+  }
+
+  const skills = value
+    .split(",")
+    .map((skill) => skill.trim())
+    .filter(Boolean);
+
+  return skills.length ? skills : null;
+}
+
+export async function createEventAction(
+  _state: CreateEventActionState,
+  formData: FormData,
+): Promise<CreateEventActionState> {
+  if (!isSupabaseConfigured()) {
+    return { message: "Supabase environment variables are not configured yet." };
+  }
+
+  const parsed = createEventSchema.safeParse({
+    eventName: formValue(formData, "eventName"),
+    description: formValue(formData, "description"),
+    location: formValue(formData, "location"),
+    startTime: formValue(formData, "startTime"),
+    endTime: formValue(formData, "endTime"),
+    status: formValue(formData, "status"),
+    volunteerSlots: formValue(formData, "volunteerSlots"),
+    registrationOpensAt: formValue(formData, "registrationOpensAt"),
+    registrationClosesAt: formValue(formData, "registrationClosesAt"),
+    taskRequirements: formValue(formData, "taskRequirements"),
+    skillsRequired: formValue(formData, "skillsRequired"),
+    coordinatorName: formValue(formData, "coordinatorName"),
+    coordinatorContact: formValue(formData, "coordinatorContact"),
+    instructions: formValue(formData, "instructions"),
+    certificateTitle: formValue(formData, "certificateTitle"),
+    certificateThresholdMinutes: formValue(formData, "certificateThresholdMinutes"),
+  });
+
+  if (!parsed.success) {
+    return { fieldErrors: parsed.error.flatten().fieldErrors };
+  }
+
+  const user = await getCurrentUser();
+  if (!user) {
+    return { message: "Your session has expired. Please log in again." };
+  }
+
+  const roles = await getUserRoles(user.id);
+  if (!isAdminRole(roles)) {
+    return { message: "Only administrators and coordinators can create events." };
+  }
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("events")
+    .insert({
+      event_name: parsed.data.eventName,
+      description: parsed.data.description,
+      location: parsed.data.location,
+      start_time: toIsoDateTime(parsed.data.startTime),
+      end_time: toIsoDateTime(parsed.data.endTime),
+      status: parsed.data.status,
+      volunteer_slots: parsed.data.volunteerSlots,
+      registration_opens_at: toIsoDateTime(parsed.data.registrationOpensAt),
+      registration_closes_at: toIsoDateTime(parsed.data.registrationClosesAt),
+      task_requirements: parsed.data.taskRequirements,
+      skills_required: splitSkills(parsed.data.skillsRequired),
+      coordinator_name: parsed.data.coordinatorName,
+      coordinator_contact: parsed.data.coordinatorContact,
+      instructions: parsed.data.instructions,
+      certificate_title: parsed.data.certificateTitle,
+      certificate_threshold_minutes: parsed.data.certificateThresholdMinutes ?? 0,
+    })
+    .select("id")
+    .single();
+
+  if (error || !data) {
+    return { message: error?.message ?? "We could not create the event. Please try again." };
+  }
+
+  revalidatePath("/admin");
+  revalidatePath("/admin/events");
+  revalidatePath("/events");
+
+  return { ok: true, message: "Event created successfully.", eventId: data.id };
+}
 
 export async function registerForEventAction(
   _state: RegistrationActionState,

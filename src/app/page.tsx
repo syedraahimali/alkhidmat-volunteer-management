@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ArrowRight, CalendarDays, FileCheck2, QrCode, ShieldCheck } from "lucide-react";
+import { PublicFooter } from "@/components/layout/public-footer";
 import { PublicHeader } from "@/components/layout/public-header";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -73,21 +74,8 @@ export default function Home() {
             </div>
           </div>
         </section>
-        <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-          <div className="grid gap-4 md:grid-cols-3">
-            {[
-              ["Phase 1", "Auth, roles, Supabase configuration, protected routes, and migration foundation."],
-              ["Database-first", "Existing volunteers, events, and attendance tables are preserved and extended safely."],
-              ["Next steps", "Events, registration, admin tools, QR attendance, certificates, chat, badges, and analytics."],
-            ].map(([title, body]) => (
-              <div key={title} className="border-l-4 border-brand bg-white p-5 shadow-sm">
-                <h2 className="font-semibold text-slate-950">{title}</h2>
-                <p className="mt-2 text-sm leading-6 text-slate-600">{body}</p>
-              </div>
-            ))}
-          </div>
-        </section>
       </main>
+      <PublicFooter />
     </div>
   );
 }

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Toaster } from "sonner";
+import { ChatbotWidget } from "@/components/chatbot/chatbot-widget";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -35,6 +36,7 @@ export default function RootLayout({
     >
       <body className="min-h-full">
         {children}
+        <ChatbotWidget />
         <Toaster richColors position="top-right" />
       </body>
     </html>
