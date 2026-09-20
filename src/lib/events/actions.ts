@@ -19,6 +19,11 @@ export type CreateEventActionState = {
   fieldErrors?: Record<string, string[] | undefined>;
 };
 
+export type EventCompletionActionState = {
+  ok?: boolean;
+  message?: string;
+};
+
 const eventIdSchema = z.uuid();
 
 function formValue(formData: FormData, key: string) {
@@ -117,6 +122,62 @@ export async function createEventAction(
   revalidatePath("/events");
 
   return { ok: true, message: "Event created successfully.", eventId: data.id };
+}
+
+export async function markEventCompletedAction(
+  _state: EventCompletionActionState,
+  formData: FormData,
+): Promise<EventCompletionActionState> {
+  if (!isSupabaseConfigured()) {
+    return { message: "Supabase environment variables are not configured yet." };
+  }
+
+  const eventIdResult = eventIdSchema.safeParse(formData.get("eventId"));
+  if (!eventIdResult.success) {
+    return { message: "This event link is invalid." };
+  }
+
+  const user = await getCurrentUser();
+  if (!user) {
+    return { message: "Your session has expired. Please log in again." };
+  }
+
+  const roles = await getUserRoles(user.id);
+  if (!roles.some((role) => role === "admin" || role === "coordinator")) {
+    return { message: "Only administrators and coordinators can mark events completed." };
+  }
+
+  const supabase = await createClient();
+  const { data: event, error: eventLookupError } = await supabase
+    .from("events")
+    .select("id, status")
+    .eq("id", eventIdResult.data)
+    .maybeSingle();
+
+  if (eventLookupError || !event) {
+    return { message: "We could not find this event." };
+  }
+
+  if (event.status !== "upcoming" && event.status !== "ongoing") {
+    return { message: "Only upcoming or ongoing events can be marked completed." };
+  }
+
+  const { error } = await supabase
+    .from("events")
+    .update({ status: "completed" })
+    .eq("id", event.id)
+    .in("status", ["upcoming", "ongoing"]);
+
+  if (error) {
+    return { message: "We could not mark this event as completed. Please try again." };
+  }
+
+  revalidatePath("/admin");
+  revalidatePath("/admin/events");
+  revalidatePath("/events");
+  revalidatePath(`/events/${event.id}`);
+
+  return { ok: true, message: "Event marked as completed." };
 }
 
 export async function registerForEventAction(

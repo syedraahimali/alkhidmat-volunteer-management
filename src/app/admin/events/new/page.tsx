@@ -8,10 +8,10 @@ import { requireAdmin } from "@/lib/auth/session";
 export const dynamic = "force-dynamic";
 
 export default async function AdminCreateEventPage() {
-  const { user } = await requireAdmin();
+  const { user, roles } = await requireAdmin();
 
   return (
-    <AppShell userEmail={user.email} isAdmin>
+    <AppShell userEmail={user.email} portal="admin" userRoles={roles}>
       <div className="grid gap-6">
         <Link href="/admin/events" className="inline-flex items-center gap-2 text-sm font-medium text-brand hover:underline">
           <ArrowLeft className="h-4 w-4" />

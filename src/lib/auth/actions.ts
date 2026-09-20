@@ -25,7 +25,7 @@ function formValue(formData: FormData, key: string) {
 }
 
 function safeNextPath(next?: string | null) {
-  if (!next || !next.startsWith("/") || next.startsWith("//")) {
+  if (!next || !next.startsWith("/") || next.startsWith("//") || next.startsWith("/admin")) {
     return "/dashboard";
   }
 

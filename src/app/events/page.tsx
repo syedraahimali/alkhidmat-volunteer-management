@@ -3,7 +3,7 @@ import { CalendarDays, MapPin } from "lucide-react";
 import { AppShell } from "@/components/layout/app-shell";
 import { Alert } from "@/components/ui/alert";
 import { Card } from "@/components/ui/card";
-import { getUserRoles, isAdminRole, requireUser } from "@/lib/auth/session";
+import { getUserRoles, requireUser } from "@/lib/auth/session";
 import { formatEventDateTime } from "@/lib/events/format";
 import { isSupabaseConfigured } from "@/lib/env";
 import { createClient } from "@/lib/supabase/server";
@@ -16,7 +16,7 @@ export default async function EventsPage() {
 
   if (!isSupabaseConfigured()) {
     return (
-      <AppShell userEmail={user.email} isAdmin={isAdminRole(roles)}>
+      <AppShell userEmail={user.email} portal="volunteer" userRoles={roles}>
         <Alert>Supabase is not configured yet. Events cannot be loaded.</Alert>
       </AppShell>
     );
@@ -33,7 +33,7 @@ export default async function EventsPage() {
     .limit(50);
 
   return (
-    <AppShell userEmail={user.email} isAdmin={isAdminRole(roles)}>
+    <AppShell userEmail={user.email} portal="volunteer" userRoles={roles}>
       <div>
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>

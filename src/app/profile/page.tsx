@@ -4,7 +4,7 @@ import { AppShell } from "@/components/layout/app-shell";
 import { Alert } from "@/components/ui/alert";
 import { Card } from "@/components/ui/card";
 import { ProfileForm } from "@/components/profile/profile-form";
-import { getUserRoles, isAdminRole, requireUser } from "@/lib/auth/session";
+import { getUserRoles, requireUser } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -20,7 +20,7 @@ export default async function ProfilePage() {
     .maybeSingle();
 
   return (
-    <AppShell userEmail={user.email} isAdmin={isAdminRole(roles)}>
+    <AppShell userEmail={user.email} portal="volunteer" userRoles={roles}>
       <Card className="p-6">
         <div className="flex items-center gap-3">
           <span className="flex h-12 w-12 items-center justify-center rounded-lg bg-teal-50 text-brand">

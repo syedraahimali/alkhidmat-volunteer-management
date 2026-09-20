@@ -4,6 +4,7 @@ import { AppShell } from "@/components/layout/app-shell";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { EventCompletionAction } from "@/components/events/event-completion-action";
 import { requireAdmin } from "@/lib/auth/session";
 import { formatEventDateTime } from "@/lib/events/format";
 import { createClient } from "@/lib/supabase/server";
@@ -15,7 +16,7 @@ type AdminEventsPageProps = {
 };
 
 export default async function AdminEventsPage({ searchParams }: AdminEventsPageProps) {
-  const { user } = await requireAdmin();
+  const { user, roles } = await requireAdmin();
   const params = await searchParams;
   const supabase = await createClient();
   const { data: events, error } = await supabase
@@ -25,7 +26,7 @@ export default async function AdminEventsPage({ searchParams }: AdminEventsPageP
     .limit(100);
 
   return (
-    <AppShell userEmail={user.email} isAdmin>
+    <AppShell userEmail={user.email} portal="admin" userRoles={roles}>
       <div className="grid gap-6">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
@@ -56,7 +57,13 @@ export default async function AdminEventsPage({ searchParams }: AdminEventsPageP
                 <div className="flex flex-wrap items-start justify-between gap-4">
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className="rounded-full bg-teal-50 px-2.5 py-1 text-xs font-medium uppercase text-brand">
+                      <span
+                        className={
+                          event.status === "completed"
+                            ? "rounded-full bg-slate-950 px-2.5 py-1 text-xs font-medium uppercase text-white"
+                            : "rounded-full bg-teal-50 px-2.5 py-1 text-xs font-medium uppercase text-brand"
+                        }
+                      >
                         {event.status}
                       </span>
                       <span className="text-xs text-slate-500">
@@ -91,6 +98,9 @@ export default async function AdminEventsPage({ searchParams }: AdminEventsPageP
                     <Button asChild variant="ghost" size="sm">
                       <Link href={`/admin/attendance?event=${event.id}`}>Attendance</Link>
                     </Button>
+                    {event.status === "upcoming" || event.status === "ongoing" ? (
+                      <EventCompletionAction eventId={event.id} />
+                    ) : null}
                   </div>
                 </div>
               </Card>

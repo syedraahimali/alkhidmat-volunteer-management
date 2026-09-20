@@ -37,6 +37,10 @@ export function isAdminRole(roles: AppRole[]) {
   return roles.some((role) => ["admin", "coordinator", "ngo_admin"].includes(role));
 }
 
+export function hasVolunteerRole(roles: AppRole[]) {
+  return roles.includes("volunteer");
+}
+
 export async function requireAdmin() {
   const user = await requireUser();
   const roles = await getUserRoles(user.id);

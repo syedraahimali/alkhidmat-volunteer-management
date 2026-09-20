@@ -6,7 +6,7 @@ import { MessageForm } from "@/components/community/message-form";
 import { AppShell } from "@/components/layout/app-shell";
 import { Alert } from "@/components/ui/alert";
 import { Card } from "@/components/ui/card";
-import { getUserRoles, isAdminRole, requireUser } from "@/lib/auth/session";
+import { getUserRoles, requireUser } from "@/lib/auth/session";
 import { formatEventDateTime, formatRegistrationWindow } from "@/lib/events/format";
 import { isSupabaseConfigured } from "@/lib/env";
 import { createClient } from "@/lib/supabase/server";
@@ -24,7 +24,7 @@ export default async function EventDetailsPage({ params }: EventDetailsPageProps
 
   if (!isSupabaseConfigured()) {
     return (
-      <AppShell userEmail={user.email} isAdmin={isAdminRole(roles)}>
+      <AppShell userEmail={user.email} portal="volunteer" userRoles={roles}>
         <Alert>Supabase is not configured yet. Event details cannot be loaded.</Alert>
       </AppShell>
     );
@@ -46,7 +46,7 @@ export default async function EventDetailsPage({ params }: EventDetailsPageProps
 
   if (eventError || !event) {
     return (
-      <AppShell userEmail={user.email} isAdmin={isAdminRole(roles)}>
+      <AppShell userEmail={user.email} portal="volunteer" userRoles={roles}>
         <Alert className="border-red-200 bg-red-50 text-red-900">
           We could not load this event. Please refresh and try again.
         </Alert>
@@ -76,7 +76,7 @@ export default async function EventDetailsPage({ params }: EventDetailsPageProps
   const registrationOpen = event.status === "upcoming" || event.status === "ongoing";
 
   return (
-    <AppShell userEmail={user.email} isAdmin={isAdminRole(roles)}>
+    <AppShell userEmail={user.email} portal="volunteer" userRoles={roles}>
       <div className="grid gap-6">
         <Link href="/events" className="inline-flex items-center gap-2 text-sm font-medium text-brand hover:underline">
           <ArrowLeft className="h-4 w-4" />

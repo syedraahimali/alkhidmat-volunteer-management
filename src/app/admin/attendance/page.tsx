@@ -14,7 +14,7 @@ type AttendancePageProps = {
 };
 
 export default async function AdminAttendancePage({ searchParams }: AttendancePageProps) {
-  const { user } = await requireAdmin();
+  const { user, roles } = await requireAdmin();
   const params = await searchParams;
   const supabase = await createClient();
   const { data: events, error: eventsError } = await supabase
@@ -41,7 +41,7 @@ export default async function AdminAttendancePage({ searchParams }: AttendancePa
   const volunteerMap = new Map((volunteers ?? []).map((volunteer) => [volunteer.id, volunteer]));
 
   return (
-    <AppShell userEmail={user.email} isAdmin>
+    <AppShell userEmail={user.email} portal="admin" userRoles={roles}>
       <div className="grid gap-6">
         <div>
           <p className="text-sm font-medium text-brand">Coordinator tools</p>

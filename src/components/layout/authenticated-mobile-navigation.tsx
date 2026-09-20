@@ -15,34 +15,47 @@ import {
   QrCode,
   Shield,
   UserRound,
+  UsersRound,
   X,
 } from "lucide-react";
 import { logoutAction } from "@/lib/auth/actions";
 import { Button } from "@/components/ui/button";
+import type { AppRole } from "@/lib/database.types";
 
 type AuthenticatedMobileNavigationProps = {
   userEmail?: string | null;
   isAdmin?: boolean;
+  portal?: "volunteer" | "admin";
+  userRoles?: AppRole[];
 };
 
-export function AuthenticatedMobileNavigation({ userEmail, isAdmin }: AuthenticatedMobileNavigationProps) {
+export function AuthenticatedMobileNavigation({ userEmail, isAdmin, portal, userRoles = [] }: AuthenticatedMobileNavigationProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const activePortal = portal ?? (isAdmin ? "admin" : "volunteer");
+  const isAdminPortal = activePortal === "admin";
+  const canAccessAdmin = userRoles.some((role) => ["admin", "coordinator", "ngo_admin"].includes(role));
+  const canAccessVolunteer = userRoles.includes("volunteer");
   const linkClassName = "flex min-h-12 items-center gap-3 rounded-md px-3 py-3 text-sm font-medium text-slate-700 hover:bg-teal-50 hover:text-brand";
-  const links = isAdmin
+  const links = isAdminPortal
     ? [
         { href: "/admin", label: "Admin Dashboard", icon: CalendarDays },
-        { href: "/admin/events", label: "Events", icon: CalendarDays },
+        { href: "/admin/events", label: "Event Management", icon: CalendarDays },
         { href: "/admin/events/new", label: "Create New Event", icon: Shield },
         { href: "/admin/attendance", label: "Attendance", icon: QrCode },
+        { href: "/admin/volunteers", label: "Volunteers", icon: UsersRound },
         { href: "/admin/certificates", label: "Certificates", icon: Award },
         { href: "/admin/communications", label: "Communications", icon: Megaphone },
+        { href: "/admin/badges", label: "Badges", icon: Award },
         { href: "/admin/analytics", label: "Analytics", icon: BarChart3 },
+        ...(canAccessVolunteer ? [{ href: "/dashboard", label: "Volunteer Portal", icon: HeartHandshake }] : []),
       ]
     : [
         { href: "/dashboard", label: "Dashboard", icon: CalendarDays },
         { href: "/events", label: "Events", icon: CalendarDays },
         { href: "/profile", label: "Profile", icon: UserRound },
         { href: "/dashboard#notifications", label: "Notifications", icon: Bell },
+        { href: "/dashboard#certificates", label: "Certificates/Badges", icon: Award },
+        ...(canAccessAdmin ? [{ href: "/admin", label: "Admin Portal", icon: Shield }] : []),
       ];
 
   useEffect(() => {
@@ -92,7 +105,7 @@ export function AuthenticatedMobileNavigation({ userEmail, isAdmin }: Authentica
             </span>
             <div className="min-w-0 leading-tight">
               <p className="truncate text-sm font-semibold text-slate-950">Alkhidmat Karachi</p>
-              <p className="truncate text-xs text-slate-500">Volunteer Portal</p>
+              <p className="truncate text-xs text-slate-500">{isAdminPortal ? "Admin Portal" : "Volunteer Portal"}</p>
             </div>
           </div>
           <Button

@@ -206,5 +206,6 @@ export async function recordAttendanceScanAction(input: {
 
   revalidatePath("/admin/attendance");
   revalidatePath(`/admin/attendance?event=${event.id}`);
+  revalidatePath("/dashboard");
   return { ok: true, message: `${volunteer?.full_name || "Volunteer"} checked in successfully.` };
 }
